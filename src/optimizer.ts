@@ -2,7 +2,7 @@ import {uniqBy} from 'lodash'
 import {Options} from '.'
 import {generateType} from './generator'
 import {AST, T_ANY, T_UNKNOWN} from './types/AST'
-import {log} from './utils'
+import {joinComments, log} from './utils'
 
 export function optimize(ast: AST, options: Options, processed = new Set<AST>()): AST {
   if (processed.has(ast)) {
@@ -53,6 +53,16 @@ export function optimize(ast: AST, options: Options, processed = new Set<AST>())
       if (params.length !== optimizedAST.params.length) {
         log('cyan', 'optimizer', '[A, B, B] -> [A, B]', optimizedAST)
         optimizedAST.params = params
+      }
+
+      // [A] -> A
+      if (optimizedAST.params.length === 1) {
+        log('cyan', 'optimizer', '[A] -> A', optimizedAST)
+        const param = optimizedAST.params[0]
+        return {
+          ...param,
+          comment: joinComments(optimizedAST.comment, param.comment)
+        }
       }
 
       return Object.assign(optimizedAST, {
